@@ -79,8 +79,7 @@ def query_torrent_simple_by_page(page):
 
 if __name__ == '__main__':
     # update_user_cookie(123, 'tomxie', 'hahahahah')
-    user_obj = User()
-    user_obj.bt_user = 'aaa'
-    user_obj.bt_cookie = 'ccccc'
-    user_obj.tg_user_id = 123
-    add_user(user_obj)
+    torrent_list = query_torrent_simple_by_page(0)
+    for i, t in enumerate(torrent_list):
+        print(i)
+        print(t[1])

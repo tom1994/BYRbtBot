@@ -1,6 +1,7 @@
 import configparser
 import shutil
 
+from apscheduler.schedulers.background import BackgroundScheduler
 from lxml import etree
 
 from bot.constants import url_login, url_base, vcode_save_path, url_takelogin, cookie_prefix
@@ -65,6 +66,14 @@ def convert_size_list(size_raw):
         return -1
 
 
+def format_torrent_simple_to_msg(torrent_iter):
+    a_tmpl = '<b>{}. </b><a href="{}">{}</a>\n'
+    a_list = []
+    for i, t in enumerate(torrent_iter):
+        a_list.append(a_tmpl.format(i + 1, t[2], t[1]))
+    return ''.join(a_list)
+
+
 def singleton(cls, *args, **kw):
     instances = {}
 
@@ -78,7 +87,7 @@ def singleton(cls, *args, **kw):
 
 @singleton
 class BTConfigParser:
-    def __init__(self, conf_path='conf/bt.conf'):
+    def __init__(self, conf_path='./conf/bt.conf'):
         self.__cf = configparser.RawConfigParser()
         self.__cf.read_file(open(conf_path))
         self.db_url = self.__cf.get('db', 'db_url')
@@ -87,6 +96,29 @@ class BTConfigParser:
         self.db_password = self.__cf.get('db', 'db_password')
         self.db_database = self.__cf.get('db', 'db_database')
         self.bt_cookie = self.__cf.get('bt', 'bt_cookie')
+
+
+@singleton
+class DBScheduler:
+    def __init__(self, *func):
+        self.__started = False
+        self.__scheduler = BackgroundScheduler()
+        for i, f in enumerate(func):
+            self.__scheduler.add_job(f, 'interval', seconds=300, id='job#{}'.format(i))
+
+    def start_all(self):
+        if not self.__started:
+            self.__scheduler.start()
+        else:
+            # todo: add logging
+            pass
+
+    def stop_all(self):
+        if self.__started:
+            self.__scheduler.shutdown()
+        else:
+            # todo: add logging
+            pass
 
 
 if __name__ == '__main__':

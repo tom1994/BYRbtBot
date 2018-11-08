@@ -3,6 +3,7 @@ import requests
 from lxml import etree
 from bot.constants import url_login, url_base, vcode_save_path, url_takelogin, cookie_prefix, url_torrents, \
     url_download_prefix
+from bot.db.dao import del_torrent_simple_all, add_torrent_simple
 from bot.db.models import TorrentSimple
 from bot.utils import download_file, BTConfigParser
 
@@ -92,19 +93,23 @@ def get_torrents_by_page(page):
         t = Torrent(id=torrent_id, name=torrent_name[0], link=torrent_link, size=torrent_size,
                     download_link=torrent_download_link, up_num=upload_num, down_num=download_num,
                     free_status=free_status, limit_status=limit_status, page=page)
-        torrent_list.append(t)
-    print(len(torrent_list))
-    return torrent_list
+        # torrent_list.append(t)
+        yield t
+    # print(len(torrent_list))
+    # return torrent_list
 
 
 def get_torrent_simple(max):
     torrent_list = []
     for i in range(max):
         torrent_list_i = get_torrents_by_page(i)
-        torrent_list.extend([t.to_torrent_obj_lite() for t in torrent_list_i])
-
-    return torrent_list
+        # torrent_list.extend([t.to_torrent_obj_lite() for t in torrent_list_i])
+        for t in torrent_list_i:
+            yield t.to_torrent_obj_lite()
+    # return torrent_list
 
 
 if __name__ == '__main__':
-    print(get_torrent_simple(50))
+    del_torrent_simple_all()
+    for t in get_torrent_simple(50):
+        add_torrent_simple(t)

@@ -7,9 +7,11 @@ from telebot import types
 import time
 
 from bot.constants import cookie_prefix
-from bot.db.dao import query_user, add_user, update_user_cookie
+from bot.db.dao import query_user, add_user, update_user_cookie, del_torrent_simple_all, add_torrent_simple, \
+    query_torrent_simple_by_page
 from bot.db.models import User
-from bot.utils import get_vcode_img, get_cookie
+from bot.spider.bt_spider import get_torrent_simple
+from bot.utils import get_vcode_img, get_cookie, DBScheduler, format_torrent_simple_to_msg
 
 TOKEN = "751771463:AAFdkZOYHDw-JACNo8tYb0oCeTZdtZmMavY"
 
@@ -38,6 +40,15 @@ imageSelect = types.ReplyKeyboardMarkup(one_time_keyboard=True)  # create the im
 imageSelect.add('cock', 'pussy')
 
 hideBoard = types.ReplyKeyboardRemove()  # if sent as reply_markup, will hide the keyboard
+
+
+def add_torrent_page_50():
+    del_torrent_simple_all()
+    for t in get_torrent_simple(50):
+        add_torrent_simple(t)
+
+
+scheduler = DBScheduler(add_torrent_page_50)
 
 
 # error handling if user isn't known yet
@@ -242,7 +253,13 @@ def command_page(message):
                 return
             else:
                 page_num = int(page_num_str)
+                if page_num <= 0 or page_num > 50:
+                    bot.send_message(chat_id, 'Page number out of range, please enter a number between 1 to 50.')
+                    return
                 # TODO: get torrents title and href from database
+                torrent_iter = query_torrent_simple_by_page(page_num - 1)
+                msg_torrent_page = format_torrent_simple_to_msg(torrent_iter)
+                bot.send_message(chat_id, msg_torrent_page, parse_mode='HTML')
     except Exception as e:
         bot.send_message(chat_id, 'oooops:' + str(e))
 
@@ -261,6 +278,14 @@ def process_page_num(message):
         bot.send_message(chat_id, 'oooops:' + str(e))
 
 
+# Handle '/test'
+@bot.message_handler(commands=['test'])
+def command_page(message):
+    chat_id = message.chat.id
+    bot.send_message(chat_id, '', parse_mode='HTML')
+
+
 # bot.enable_save_next_step_handlers(delay=2)
 # bot.load_next_step_handlers()
+# scheduler.start_all()
 bot.polling()

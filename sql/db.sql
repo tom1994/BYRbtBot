@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `user`(
 CREATE TABLE IF NOT EXISTS `torrent_page_50`(
    `id` int unsigned AUTO_INCREMENT,
    `torrent_id` int unsigned NOT NULL UNIQUE,
-   `torrent_name` varchar(100) NOT NULL,
+   `torrent_name` text NOT NULL,
    `torrent_link` varchar(100) NOT NULL,
    `page` int unsigned,
    PRIMARY KEY ( `id` )
