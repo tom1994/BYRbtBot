@@ -1,0 +1,8 @@
+[db]
+db_url = <your database url or ip>
+db_port = <database port>
+db_user = <database username>
+db_password = <password>
+db_database = <database name>
+[bt]
+bt_cookie = <cookie when access bt>

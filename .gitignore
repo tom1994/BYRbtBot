@@ -1,0 +1,4 @@
+venv/
+.idea/
+bot/conf/*.conf
+*.pyc
