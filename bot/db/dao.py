@@ -1,4 +1,4 @@
-from bot.db.models import User, TorrentSimple
+from bot.db.models import User, TorrentSimple, TorrentFull
 from bot.db.util import session_scope, DBSession
 
 
@@ -75,6 +75,36 @@ def query_torrent_simple_by_page(page):
             .filter(TorrentSimple.page == page) \
             .all()
         return result
+
+
+# add torrent full to db
+def add_torrent_full(torrent):
+    with session_scope(DBSession) as session:
+        result = session.query(TorrentFull) \
+            .filter(TorrentFull.torrent_id == torrent.torrent_id) \
+            .first()
+        if result is None:
+            session.add(torrent)
+        else:
+            session.merge(torrent)
+
+
+# query torrent from table torrent_update
+def query_torrent_by_notify_level(notify_level):
+    with session_scope(DBSession) as session:
+        result_raw = session.query(TorrentFull.torrent_id) \
+            .filter(TorrentFull.notify_level == notify_level) \
+            .all()
+        result = [r[0] for r in result_raw]
+        return result
+
+
+# update torrent push status when push complete
+def update_torrent_push_status(torrent_id):
+    with session_scope(DBSession) as session:
+        session.query(TorrentFull) \
+            .filter(TorrentFull.torrent_id == torrent_id) \
+            .update({TorrentFull.push_status: 1})
 
 
 if __name__ == '__main__':

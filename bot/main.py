@@ -248,18 +248,7 @@ def command_page(message):
             bot.register_next_step_handler(msg, process_page_num)
         else:
             page_num_str = message.text.replace('/page', '').strip()
-            if not page_num_str.isdigit():
-                bot.send_message(chat_id, 'Please enter a NUMBER(don\'t more than 50). e.g. /page 1')
-                return
-            else:
-                page_num = int(page_num_str)
-                if page_num <= 0 or page_num > 50:
-                    bot.send_message(chat_id, 'Page number out of range, please enter a number between 1 to 50.')
-                    return
-                # TODO: get torrents title and href from database
-                torrent_iter = query_torrent_simple_by_page(page_num - 1)
-                msg_torrent_page = format_torrent_simple_to_msg(torrent_iter)
-                bot.send_message(chat_id, msg_torrent_page, parse_mode='HTML')
+            send_torrent_page(chat_id, page_num_str)
     except Exception as e:
         bot.send_message(chat_id, 'oooops:' + str(e))
 
@@ -269,20 +258,66 @@ def process_page_num(message):
     text = message.text.strip()
     try:
         page_num_str = text
-        if not page_num_str.isdigit():
-            bot.send_message(chat_id, 'Please enter a NUMBER(don\'t more than 50). e.g. /page 1')
-            return
-        else:
-            page_num = int(page_num_str)
+        send_torrent_page(chat_id, page_num_str)
     except Exception as e:
         bot.send_message(chat_id, 'oooops:' + str(e))
+
+
+def send_torrent_page(chat_id, page_num_str):
+    if not page_num_str.isdigit():
+        bot.send_message(chat_id, 'Please enter a NUMBER(don\'t more than 50). e.g. /page 1')
+        return
+    else:
+        page_num = int(page_num_str)
+        if page_num <= 0 or page_num > 50:
+            bot.send_message(chat_id, 'Page number out of range, please enter a number between 1 to 50.')
+            return
+        torrent_iter = query_torrent_simple_by_page(page_num - 1)
+        msg_torrent_page = format_torrent_simple_to_msg(torrent_iter)
+        msg_torrent_page = 'Page {}\n'.format(page_num) + msg_torrent_page
+        bot.send_message(chat_id, msg_torrent_page, parse_mode='HTML')
+
+
+# Handle '/set_notify_level'
+@bot.message_handler(commands=['set_notify_level'])
+def command_page(message):
+    chat_id = message.chat.id
+    text = message.text.strip()
+    try:
+        if text == '/set_notify_level':
+            bot.send_message(chat_id, 'Okay~')
+            bot.send_chat_action(chat_id, 'typing')  # show the bot "typing" (max. 5 secs)
+            time.sleep(0.2)
+            msg = bot.send_message(chat_id,
+                                   'Please enter your notify level~\n1: receive all torrents\n' + \
+                                   '2: receive free torrents\n3: receive hot torrents')
+            bot.register_next_step_handler(msg, process_notify_level)
+        else:
+            notify_level_str = message.text.replace('/set_notify_level', '').strip()
+            update_notify_level(chat_id, notify_level_str)
+    except Exception as e:
+        bot.send_message(chat_id, 'oooops:' + str(e))
+
+
+def process_notify_level(message):
+    chat_id = message.chat.id
+    text = message.text.strip()
+    try:
+        notify_level_str = text
+        update_notify_level(chat_id, notify_level_str)
+    except Exception as e:
+        bot.send_message(chat_id, 'oooops:' + str(e))
+
+
+def update_notify_level(chat_id, notify_level_str):
+    # todo
+    pass
 
 
 # Handle '/test'
 @bot.message_handler(commands=['test'])
 def command_page(message):
     chat_id = message.chat.id
-    bot.send_message(chat_id, '', parse_mode='HTML')
 
 
 # bot.enable_save_next_step_handlers(delay=2)

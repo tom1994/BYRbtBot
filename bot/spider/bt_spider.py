@@ -4,7 +4,7 @@ from lxml import etree
 from bot.constants import url_login, url_base, vcode_save_path, url_takelogin, cookie_prefix, url_torrents, \
     url_download_prefix
 from bot.db.dao import del_torrent_simple_all, add_torrent_simple
-from bot.db.models import TorrentSimple
+from bot.db.models import TorrentSimple, TorrentFull
 from bot.utils import download_file, BTConfigParser
 
 cookie = BTConfigParser().bt_cookie
@@ -35,7 +35,24 @@ class Torrent:
 
     def to_torrent_obj_full(self):
         # todo: add convert function to torrent db obj
-        pass
+        torrent_obj = TorrentFull()
+        torrent_obj.torrent_id = self.id
+        torrent_obj.torrent_name = self.name
+        torrent_obj.torrent_link = self.link
+        torrent_obj.torrent_size = self.size
+        torrent_obj.torrent_download_link = self.download_link
+        torrent_obj.torrent_up_num = self.up_num
+        torrent_obj.torrent_down_num = self.down_num
+        torrent_obj.free_status = self.free_status
+        torrent_obj.limit_status = self.limit_status
+        if self.free_status == 1 and (
+                self.limit_status == 1 or (0 < self.up_num < 5 and self.down_num / self.up_num > 7)):
+            torrent_obj.notify_level = 3
+        elif self.free_status == 1:
+            torrent_obj.notify_level = 2
+        else:
+            torrent_obj.notify_level = 1
+        return torrent_obj
 
     def to_torrent_obj_lite(self):
         torrent_obj = TorrentSimple()

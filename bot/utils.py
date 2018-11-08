@@ -70,7 +70,9 @@ def format_torrent_simple_to_msg(torrent_iter):
     a_tmpl = '<b>{}. </b><a href="{}">{}</a>\n'
     a_list = []
     for i, t in enumerate(torrent_iter):
-        a_list.append(a_tmpl.format(i + 1, t[2], t[1]))
+        t_name = t[1]
+        t_name = '{}...'.format(t_name[:50]) if len(t_name) > 50 else t_name
+        a_list.append(a_tmpl.format(i + 1, t[2], t_name))
     return ''.join(a_list)
 
 
