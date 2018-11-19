@@ -1,24 +1,39 @@
 import configparser
+import logging
 import shutil
 
+import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from lxml import etree
 
 from bot.constants import url_login, url_base, vcode_save_path, url_takelogin, cookie_prefix
+from bot.log_util import get_logger
+
+logger = get_logger(name='util', level=logging.INFO)
 
 
-def download_file(session, link, path, format):
+def download_vcode_file(session, link, path, format):
     vcode_hash = link.split('=')[-1]
+    file_name = vcode_hash
+    return download_file(session=session, header=None, link=link, file_name=file_name, path=path, format=format)
+
+
+def download_file(session, header, link, file_name, path, format):
     file_type = format if format.startswith('.') else '.' + format
-    file_name = vcode_hash + file_type
-    out_file_path = path + file_name if path[-1] == '/' else path + '/' + file_name
+    file_full_name = file_name + file_type
+    out_file_path = path + file_full_name if path[-1] == '/' else path + '/' + file_full_name
     # print(link)
     # print(out_file_path)
-    response = session.get(link, stream=True)
+    if session is not None:
+        response = session.get(link, stream=True)
+    elif header is not None:
+        response = requests.get(link, stream=True, headers=header)
+    else:
+        raise Exception('download file error')
     with open(out_file_path, 'wb') as out_file:
         # print(out_file)
         shutil.copyfileobj(response.raw, out_file)
-    return out_file_path, vcode_hash
+    return out_file_path, file_name
 
 
 def get_vcode_img(session):
@@ -27,7 +42,8 @@ def get_vcode_img(session):
     vcode_img_src = html.xpath(
         "//td[@id='nav_block']/form[@action='takelogin.php']/table/tr[3]/td[@align='left']/img/@src")
     vcode_img_link = url_base + vcode_img_src[0]
-    file_path, vcode_hash = download_file(session, vcode_img_link, vcode_save_path, '.png')
+    file_path, vcode_hash = download_vcode_file(session=session, link=vcode_img_link, path=vcode_save_path,
+                                                format='.png')
     return file_path, vcode_hash
 
 
@@ -76,6 +92,22 @@ def format_torrent_simple_to_msg(torrent_iter):
     return ''.join(a_list)
 
 
+def format_torrent_obj_to_msg(torrent):
+    name = torrent.torrent_name
+    down_num = torrent.torrent_down_num
+    up_num = torrent.torrent_up_num
+    size = torrent.torrent_size
+    torrent_msg = '{}\n\U00002B07\U0000FE0Fdown: {}\n\U00002B06\U0000FE0Fup: {}\n\U0001F5C4\U0000FE0Fsize: {}\n' \
+        .format(name, down_num, up_num, size)
+    return torrent_msg
+
+
+def format_user_info_to_msg(name, upload, download, share_rate):
+    user_info_msg = 'User Name: {}\n\U00002B06\U0000FE0F Upload: {}\n\U00002B07\U0000FE0F Download: {}\n\U0001F4CA Share Rate: {}\n' \
+        .format(name, upload, download, share_rate)
+    return user_info_msg
+
+
 def singleton(cls, *args, **kw):
     instances = {}
 
@@ -102,26 +134,42 @@ class BTConfigParser:
 
 @singleton
 class DBScheduler:
-    def __init__(self, *func):
+    def __init__(self):
+        self.__job_count = 0
         self.__started = False
         self.__scheduler = BackgroundScheduler()
-        for i, f in enumerate(func):
-            self.__scheduler.add_job(f, 'interval', seconds=300, id='job#{}'.format(i))
+
+    def add_interval_job(self, func, seconds):
+        self.__scheduler.add_job(func, 'interval', seconds=seconds, id='job#{}'.format(self.__job_count))
+        self.__job_count += 1
 
     def start_all(self):
         if not self.__started:
             self.__scheduler.start()
+            self.__started = True
+            logger.info('scheduler started!')
+            return
         else:
-            # todo: add logging
+            logger.warning('scheduler is running!')
             pass
 
     def stop_all(self):
         if self.__started:
             self.__scheduler.shutdown()
+            self.__started = False
+            logger.info('scheduler stopped!')
         else:
-            # todo: add logging
+            logger.warning('scheduler is not running!')
             pass
 
 
 if __name__ == '__main__':
-    print(BTConfigParser().bt_cookie)
+    s = requests.Session()
+    username = '*****'
+    password = '*****'
+
+    path, hash = get_vcode_img(s)
+    print(hash)
+    vcode_str = input("vcode:")
+    cookie = get_cookie(s, username, password, vcode_str, hash)
+    print(cookie)

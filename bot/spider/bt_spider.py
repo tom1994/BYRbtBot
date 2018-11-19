@@ -1,23 +1,20 @@
+import logging
 import re
+import time
+
 import requests
 from lxml import etree
 from bot.constants import url_login, url_base, vcode_save_path, url_takelogin, cookie_prefix, url_torrents, \
-    url_download_prefix
-from bot.db.dao import del_torrent_simple_all, add_torrent_simple
+    url_download_prefix, header, url_index
+from bot.db.dao import del_torrent_simple_all, add_torrent_simple, add_torrent_full
 from bot.db.models import TorrentSimple, TorrentFull
-from bot.utils import download_file, BTConfigParser
+from bot.log_util import get_logger
+from bot.utils import download_file, BTConfigParser, format_user_info_to_msg
 
 cookie = BTConfigParser().bt_cookie
-header = {
-    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-    "accept-encoding": "gzip, deflate, br",
-    "accept-language": "zh-CN,zh;q=0.9",
-    "cache-control": "max-age=0",
-    "cookie": cookie,
-    "dnt": "1",
-    "upgrade-insecure-requests": "1",
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
-}
+spider_header = dict(header)
+spider_header['cookie'] = cookie
+logger = get_logger(name='bt_spider', level=logging.INFO)
 
 
 class Torrent:
@@ -34,7 +31,6 @@ class Torrent:
         self.page = page
 
     def to_torrent_obj_full(self):
-        # todo: add convert function to torrent db obj
         torrent_obj = TorrentFull()
         torrent_obj.torrent_id = self.id
         torrent_obj.torrent_name = self.name
@@ -60,11 +56,15 @@ class Torrent:
         torrent_obj.torrent_name = self.name
         torrent_obj.torrent_link = self.link
         torrent_obj.page = self.page
+        torrent_obj.torrent_download_link = self.download_link
+        torrent_obj.torrent_up_num = self.up_num
+        torrent_obj.torrent_down_num = self.down_num
+        torrent_obj.torrent_size = self.size
         return torrent_obj
 
 
 def get_torrents_by_page(page):
-    response = requests.get(url=url_torrents.format(page), headers=header)
+    response = requests.get(url=url_torrents.format(page), headers=spider_header)
     html = etree.HTML(response.content)
     all_torrents = html.xpath("//table[@class='torrents']/form[@id='form_torrent']/tr")
     torrent_list = []
@@ -86,47 +86,67 @@ def get_torrents_by_page(page):
         upload_num2 = torrent.xpath("./td[@class='rowfollow']/span[@class='red']/text()")
         upload_num3 = torrent.xpath("./td[@align='center' and @class='rowfollow']/b/a/font/text()")
         upload_num_list = upload_num1 or upload_num2 or upload_num3
-        upload_num = upload_num_list[0]
+        upload_num = int(re.sub(r'\W+', '', upload_num_list[0]))
         # if this torrent is limited
         limit_status = 1 if len(upload_num3) != 0 else 0
         # two types of download number
         download_num1 = torrent.xpath("./td[@class='rowfollow'][5]/b/a/text()")
         download_num2 = torrent.xpath("./td[@class='rowfollow'][5]/text()")
         download_num_list = download_num1 or download_num2
-        download_num = download_num_list[0]
+        download_num = int(re.sub(r'\W+', '', download_num_list[0]))
         # get torrent size list [num, unit]
         torrent_size_raw = torrent.xpath("./td[@class='rowfollow'][3]/text()")
         torrent_size = ''.join(torrent_size_raw)
 
-        # print(torrent_name[0])
-        # print(free_status)
-        # print(limit_status)
-        # print(torrent_link)
-        # print(torrent_download_link)
-        # print(torrent_id)
-        # print(upload_num)
-        # print(download_num)
-        # print(torrent_size)
         t = Torrent(id=torrent_id, name=torrent_name[0], link=torrent_link, size=torrent_size,
                     download_link=torrent_download_link, up_num=upload_num, down_num=download_num,
                     free_status=free_status, limit_status=limit_status, page=page)
-        # torrent_list.append(t)
         yield t
-    # print(len(torrent_list))
-    # return torrent_list
 
 
 def get_torrent_simple(max):
-    torrent_list = []
     for i in range(max):
         torrent_list_i = get_torrents_by_page(i)
         # torrent_list.extend([t.to_torrent_obj_lite() for t in torrent_list_i])
         for t in torrent_list_i:
             yield t.to_torrent_obj_lite()
-    # return torrent_list
+
+
+def get_torrent_full(max):
+    for i in range(max):
+        torrent_list_i = get_torrents_by_page(i)
+        for t in torrent_list_i:
+            yield t.to_torrent_obj_full()
+
+
+def get_user_info(cookie):
+    user_header = dict(header)
+    user_header['cookie'] = cookie
+    response = requests.get(url=url_index, headers=user_header)
+    html = etree.HTML(response.content)
+    user_info_box = html.xpath("//table[@id='info_block']//table/tr/td[@align='left']/span[@class='medium']")[0]
+    user_name_text = user_info_box.xpath("./span[@class='nowrap']/a/b/text()")
+    user_info_text = user_info_box.xpath("./text()")
+    user_name = user_name_text[0].strip()
+    share_rate = user_info_text[10].strip()
+    upload = user_info_text[11].strip()
+    download = user_info_text[12].strip()
+    user_info_msg = format_user_info_to_msg(name=user_name, upload=upload, download=download, share_rate=share_rate)
+    return user_info_msg
 
 
 if __name__ == '__main__':
-    del_torrent_simple_all()
-    for t in get_torrent_simple(50):
-        add_torrent_simple(t)
+    # for t in get_torrent_full(1):
+    #     add_torrent_full(t)
+    # logger.info('tic')
+    # try:
+    #     del_torrent_simple_all()
+    #     for t in get_torrent_simple(20):
+    #         add_torrent_simple(t)
+    #         time.sleep(0.1)
+    # except Exception as e:
+    #     logger.error(str(e))
+    # logger.info('toc')
+    cookie = '*****'
+    # cookie = cookie_prefix + cookie
+    print(get_user_info(cookie))

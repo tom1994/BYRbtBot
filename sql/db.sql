@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS `user`(
    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
    `modify_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
    `notify_level` int DEFAULT 0,
+   `stream_status` int DEFAULT 0,
+   `comm_num`      int NOT NULL DEFAULT 0,
    PRIMARY KEY ( `id` )
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -15,6 +17,9 @@ CREATE TABLE IF NOT EXISTS `torrent_page_50`(
    `torrent_name` text NOT NULL,
    `torrent_link` varchar(100) NOT NULL,
    `page` int unsigned,
+   `torrent_download_link` varchar(100) NOT NULL,
+   `torrent_up_num` int NOT NULL,
+   `torrent_down_num` int NOT NULL,
    PRIMARY KEY ( `id` )
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

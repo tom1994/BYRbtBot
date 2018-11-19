@@ -14,6 +14,8 @@ class User(Base):
     create_time = Column(DateTime, default=datetime.now())
     modify_time = Column(DateTime, default=datetime.now())
     notify_level = Column(Integer, default=0)
+    stream_status = Column(Integer, default=0)
+    comm_num = Column(Integer, default=0)
 
 
 class TorrentSimple(Base):
@@ -23,6 +25,10 @@ class TorrentSimple(Base):
     torrent_name = Column(Text)
     torrent_link = Column(String(100))
     page = Column(Integer)
+    torrent_download_link = Column(String(100))
+    torrent_up_num = Column(Integer)
+    torrent_down_num = Column(Integer)
+    torrent_size = Column(String(20))
 
 
 class TorrentFull(Base):
