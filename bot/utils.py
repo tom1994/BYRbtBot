@@ -1,12 +1,14 @@
 import configparser
+import gzip
 import logging
 import shutil
+import zlib
 
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from lxml import etree
 
-from bot.constants import url_login, url_base, vcode_save_path, url_takelogin, cookie_prefix
+from bot.constants import url_login, url_base, vcode_save_path, url_takelogin, cookie_prefix, header, torrent_save_path
 from bot.log_util import get_logger
 
 logger = get_logger(name='util', level=logging.INFO)
@@ -30,9 +32,13 @@ def download_file(session, header, link, file_name, path, format):
         response = requests.get(link, stream=True, headers=header)
     else:
         raise Exception('download file error')
+    if response.headers.get('content-encoding') == 'gzip':
+        data = gzip.GzipFile(fileobj=response.raw)
+    else:
+        data = response.raw
     with open(out_file_path, 'wb') as out_file:
         # print(out_file)
-        shutil.copyfileobj(response.raw, out_file)
+        shutil.copyfileobj(data, out_file)
     return out_file_path, file_name
 
 
@@ -164,12 +170,4 @@ class DBScheduler:
 
 
 if __name__ == '__main__':
-    s = requests.Session()
-    username = '*****'
-    password = '*****'
-
-    path, hash = get_vcode_img(s)
-    print(hash)
-    vcode_str = input("vcode:")
-    cookie = get_cookie(s, username, password, vcode_str, hash)
-    print(cookie)
+    pass
