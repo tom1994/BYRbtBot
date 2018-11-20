@@ -108,9 +108,9 @@ def format_torrent_obj_to_msg(torrent):
     return torrent_msg
 
 
-def format_user_info_to_msg(name, upload, download, share_rate):
-    user_info_msg = 'User Name: {}\n\U00002B06\U0000FE0F Upload: {}\n\U00002B07\U0000FE0F Download: {}\n\U0001F4CA Share Rate: {}\n' \
-        .format(name, upload, download, share_rate)
+def format_user_info_to_msg(name, upload, download, share_rate, rank):
+    user_info_msg = 'User Name: {}\n\U00002B06\U0000FE0F Upload: {}\n\U00002B07\U0000FE0F Download: {}\n\U0001F4CA Share Rate: {}\n\U0001F3C5 Full Rank: {}' \
+        .format(name, upload, download, share_rate, rank)
     return user_info_msg
 
 

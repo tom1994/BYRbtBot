@@ -131,7 +131,9 @@ def get_user_info(cookie):
     share_rate = user_info_text[10].strip()
     upload = user_info_text[11].strip()
     download = user_info_text[12].strip()
-    user_info_msg = format_user_info_to_msg(name=user_name, upload=upload, download=download, share_rate=share_rate)
+    user_rank = user_info_text[8].strip()
+    user_info_msg = format_user_info_to_msg(name=user_name, upload=upload, download=download, share_rate=share_rate,
+                                            rank=user_rank)
     return user_info_msg
 
 
@@ -147,6 +149,6 @@ if __name__ == '__main__':
     # except Exception as e:
     #     logger.error(str(e))
     # logger.info('toc')
-    cookie = '*****'
+    cookie = '******'
     # cookie = cookie_prefix + cookie
     print(get_user_info(cookie))
