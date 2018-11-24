@@ -9,7 +9,7 @@ import telebot
 from telebot import types
 import time
 
-from bot.constants import cookie_prefix, header, torrent_save_path
+from bot.constants import cookie_prefix, header, torrent_save_path, cat_map
 from bot.db.dao import query_user, add_user, update_user_cookie, del_torrent_simple_all, add_torrent_simple, \
     query_torrent_simple_by_page, update_user_notify_level, add_torrent_full, query_user_by_notify_level, \
     query_torrent_id_by_notify_level, query_torrent_by_id, update_torrent_push_status, query_user_lower_notify_level, \
@@ -477,10 +477,9 @@ def command_info(message):
 @bot.message_handler(commands=['test'])
 def command_test(message):
     chat_id = message.chat.id
-    torrent = query_torrent_by_id(273055)
-    msg = format_torrent_obj_to_msg(torrent)
-    makeup = create_torrent_makeup(torrent)
-    bot.send_message(chat_id, msg, reply_markup=makeup)
+    cat_list = [v[0] + ',' + v[1] for v in cat_map.values()]
+    msg = '\n'.join(cat_list)
+    bot.send_message(chat_id, msg)
 
 
 # bot.enable_save_next_step_handlers(delay=2)

@@ -8,7 +8,8 @@ import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from lxml import etree
 
-from bot.constants import url_login, url_base, vcode_save_path, url_takelogin, cookie_prefix, header, torrent_save_path
+from bot.constants import url_login, url_base, vcode_save_path, url_takelogin, cookie_prefix, header, torrent_save_path, \
+    cat_map
 from bot.log_util import get_logger
 
 logger = get_logger(name='util', level=logging.INFO)
@@ -89,12 +90,14 @@ def convert_size_list(size_raw):
 
 
 def format_torrent_simple_to_msg(torrent_iter):
-    a_tmpl = '<b>{}. </b><a href="{}">{}</a>\n'
+    a_tmpl = '<b>{}. </b><a href="{}">[{}]{}</a>\n'
     a_list = []
     for i, t in enumerate(torrent_iter):
         t_name = t[1]
         t_name = '{}...'.format(t_name[:50]) if len(t_name) > 50 else t_name
-        a_list.append(a_tmpl.format(i + 1, t[2], t_name))
+        t_type_tuple = cat_map.get(t[3])
+        t_type_simple = t_type_tuple[1]
+        a_list.append(a_tmpl.format(i + 1, t[2], t_type_simple, t_name))
     return ''.join(a_list)
 
 
@@ -103,8 +106,10 @@ def format_torrent_obj_to_msg(torrent):
     down_num = torrent.torrent_down_num
     up_num = torrent.torrent_up_num
     size = torrent.torrent_size
-    torrent_msg = '{}\n\U00002B07\U0000FE0Fdown: {}\n\U00002B06\U0000FE0Fup: {}\n\U0001F5C4\U0000FE0Fsize: {}\n' \
-        .format(name, down_num, up_num, size)
+    type_raw = torrent.torrent_type
+    type_full = cat_map.get(type_raw)[0]
+    torrent_msg = '[{}]{}\n\U00002B07\U0000FE0Fdown: {}\n\U00002B06\U0000FE0Fup: {}\n\U0001F5C4\U0000FE0Fsize: {}\n' \
+        .format(type_full, name, down_num, up_num, size)
     return torrent_msg
 
 

@@ -1,4 +1,5 @@
 import datetime
+import time
 
 from sqlalchemy.sql import operators
 
@@ -127,7 +128,8 @@ def del_torrent_simple_all():
 # get torrent use page
 def query_torrent_simple_by_page(page):
     with session_scope(DBSession) as session:
-        result = session.query(TorrentSimple.torrent_id, TorrentSimple.torrent_name, TorrentSimple.torrent_link) \
+        result = session.query(TorrentSimple.torrent_id, TorrentSimple.torrent_name, TorrentSimple.torrent_link,
+                               TorrentSimple.torrent_type) \
             .filter(TorrentSimple.page == page) \
             .all()
         return result
@@ -208,7 +210,8 @@ def update_torrent_push_status(torrent_id, notify_level):
 
 if __name__ == '__main__':
     # update_user_cookie(123, 'tomxie', 'hahahahah')
-    user = query_user(1234)
-    print(user)
+    # user = query_user(1234)
+    # print(user)
     # print(query_torrent_id_by_notify_level(2))
     # update_torrent_push_status(272834, 2)
+    pass

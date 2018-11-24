@@ -29,6 +29,7 @@ class TorrentSimple(Base):
     torrent_up_num = Column(Integer)
     torrent_down_num = Column(Integer)
     torrent_size = Column(String(20))
+    torrent_type = Column(String(10))
 
 
 class TorrentFull(Base):
@@ -38,6 +39,7 @@ class TorrentFull(Base):
     torrent_name = Column(Text)
     torrent_link = Column(String(100))
     torrent_size = Column(String(20))
+    torrent_type = Column(String(10))
     torrent_download_link = Column(String(100))
     torrent_up_num = Column(Integer)
     torrent_down_num = Column(Integer)

@@ -18,7 +18,7 @@ logger = get_logger(name='bt_spider', level=logging.INFO)
 
 
 class Torrent:
-    def __init__(self, id, name, link, size, download_link, up_num, down_num, free_status, limit_status, page):
+    def __init__(self, id, name, link, size, download_link, up_num, down_num, free_status, limit_status, type, page):
         self.id = id
         self.name = name
         self.link = link
@@ -28,6 +28,7 @@ class Torrent:
         self.down_num = down_num
         self.free_status = free_status
         self.limit_status = limit_status
+        self.type = type
         self.page = page
 
     def to_torrent_obj_full(self):
@@ -41,6 +42,7 @@ class Torrent:
         torrent_obj.torrent_down_num = self.down_num
         torrent_obj.free_status = self.free_status
         torrent_obj.limit_status = self.limit_status
+        torrent_obj.torrent_type = self.type
         if self.free_status == 1 and (
                 self.limit_status == 1 or (0 < self.up_num < 5 and self.down_num / self.up_num > 7)):
             torrent_obj.notify_level = 3
@@ -60,7 +62,17 @@ class Torrent:
         torrent_obj.torrent_up_num = self.up_num
         torrent_obj.torrent_down_num = self.down_num
         torrent_obj.torrent_size = self.size
+        torrent_obj.torrent_type = self.type
         return torrent_obj
+
+    def __str__(self):
+        torrent_str_tmp = 'id:{id}\nname:{name}\nlink:{link}\nsize:{size}\ndownload_link:{d_link}\n' + \
+                          'up_num:{up_num}\ndown_num:{down_num}\nfree_status:{free_status}\n' + \
+                          'limit_status:{limit_status}\ntype:{type}\npage:{page}'
+        return torrent_str_tmp.format(id=self.id, name=self.name, link=self.link, size=self.size,
+                                      d_link=self.download_link, up_num=self.up_num, down_num=self.down_num,
+                                      free_status=self.free_status, limit_status=self.limit_status, type=self.type,
+                                      page=self.page)
 
 
 def get_torrents_by_page(page):
@@ -98,9 +110,11 @@ def get_torrents_by_page(page):
         torrent_size_raw = torrent.xpath("./td[@class='rowfollow'][3]/text()")
         torrent_size = ''.join(torrent_size_raw)
 
+        torrent_type = torrent.xpath("./td[@class='rowfollow nowrap'][1]/a/@href")[0].strip()
+
         t = Torrent(id=torrent_id, name=torrent_name[0], link=torrent_link, size=torrent_size,
                     download_link=torrent_download_link, up_num=upload_num, down_num=download_num,
-                    free_status=free_status, limit_status=limit_status, page=page)
+                    free_status=free_status, limit_status=limit_status, type=torrent_type, page=page)
         yield t
 
 
@@ -138,17 +152,9 @@ def get_user_info(cookie):
 
 
 if __name__ == '__main__':
-    # for t in get_torrent_full(1):
-    #     add_torrent_full(t)
-    # logger.info('tic')
-    # try:
-    #     del_torrent_simple_all()
-    #     for t in get_torrent_simple(20):
-    #         add_torrent_simple(t)
-    #         time.sleep(0.1)
-    # except Exception as e:
-    #     logger.error(str(e))
-    # logger.info('toc')
     cookie = '******'
-    # cookie = cookie_prefix + cookie
-    print(get_user_info(cookie))
+
+    del_torrent_simple_all()
+    for t in get_torrent_simple(10):
+        add_torrent_simple(t)
+        time.sleep(0.1)

@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS `torrent_page_50`(
    `torrent_download_link` varchar(100) NOT NULL,
    `torrent_up_num` int NOT NULL,
    `torrent_down_num` int NOT NULL,
+   `torrent_size` varchar(20) not null,
+   `torrent_type` varchar(10) DEFAULT 'other',
    PRIMARY KEY ( `id` )
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -29,6 +31,7 @@ CREATE TABLE IF NOT EXISTS `torrent_update`(
    `torrent_name` text NOT NULL,
    `torrent_link` varchar(100) NOT NULL,
    `torrent_size` varchar(20) NOT NULL,
+   `torrent_type` varchar(10) DEFAULT 'other',
    `torrent_download_link` varchar(100) NOT NULL,
    `torrent_up_num` int NOT NULL,
    `torrent_down_num` int NOT NULL,

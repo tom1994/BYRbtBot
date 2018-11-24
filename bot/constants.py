@@ -20,3 +20,17 @@ header = {
 page_50_interval = 300  # second
 
 expire_time = 60  # day
+
+cat_map = {
+    '?cat=408': ('\U0001F39E\U0000FE0FMovie', '\U0001F39E\U0000FE0F'),
+    '?cat=401': ('\U0001F4FATV series', '\U0001F4FA'),
+    '?cat=404': ('\U0001F431Anime', '\U0001F431'),
+    '?cat=402': ('\U0001F3B5Music', '\U0001F3B5'),
+    '?cat=405': ('\U0001F37FVariety', '\U0001F37F'),
+    '?cat=403': ('\U0001F3AEGame', '\U0001F3AE'),
+    '?cat=406': ('\U0001F4BFSoftware', '\U0001F4BF'),
+    '?cat=407': ('\U0001F4C3Document', '\U0001F4C3'),
+    '?cat=409': ('\U000026BDSports', '\U000026BD'),
+    '?cat=410': ('\U0001F30EDocumentary', '\U0001F30E'),
+    'other': ('\U0001F914Other', '\U0001F914')
+}
